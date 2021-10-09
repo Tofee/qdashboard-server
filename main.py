@@ -14,8 +14,10 @@ def rss_tile_content(rss_url_base64):
     print("Retrieving RSS URL: "+rss_url)
 
     rss_url_quoted = urllib.parse.quote(rss_url, safe='/:&')
+
+    req = urllib.request.Request(rss_url_quoted, headers={'User-Agent': 'Mozilla/5.0'})
     
-    with urllib.request.urlopen(rss_url_quoted) as response:
+    with urllib.request.urlopen(req) as response:
         rss_xml = response.read()
 
     xml_as_dict = xmltodict.parse(rss_xml)
@@ -42,9 +44,25 @@ def session_save():
     
     return '', 204
 
+@app.route("/session/update/<int:tab>/<int:row>/<int:col>/<int:tile>", methods=['PUT'])
+def session_update(tab, row, col, tile):
+    # Opening JSON file
+    with open('session.json', 'r') as openfile:
+        json_object = json.load(openfile)
+
+    json_object['tabs'][tab]['rows'][row]['columns'][col]['tiles'][tile] = request.json
+        
+    new_json_data = json.dumps(json_object)
+#    print("Session data to save: " + new_json_data)
+
+    with open("session.json", "w") as outfile:
+        outfile.write(new_json_data)
+    
+    return '', 204
+
 @app.route("/session/read")
 def session_read():
-    # Opening JSON file
+    # Open JSON file
     with open('session.json', 'r') as openfile:
         json_object = json.load(openfile)
 
